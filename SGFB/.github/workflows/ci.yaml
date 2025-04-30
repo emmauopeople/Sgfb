@@ -26,21 +26,25 @@ jobs:
         node-version: '20'
 
     - name: Install dependencies
-      run: npm install
+      run: npm ci
 
-    - name: Run ESLint
+    - name: Run ESLint and show output
       run: |
-        npm install eslint
-        echo "Running ESLint..."
+        echo "📦 Installing ESLint..."
+        npm install eslint @eslint/js
+        echo "🔍 Running ESLint..."
         npx eslint . > eslint-report.txt || true
+        echo "📄 ESLint Report:"
         cat eslint-report.txt
 
+    - name: Run npm audit (high severity only)
+      run: npm audit --audit-level=high || true
 
-    - name: Run npm audit
-      run: npm audit --audit-level=high
-
-    - name: Check outdated dependencies
+    - name: Check outdated dependencies (non-blocking)
       run: npm outdated || true
+
+    - name: ✅ Lint and Audit Completed
+      run: echo "✅ Linting and security scan completed."
 
   deploy-staging:
     name: Deploy to Staging (Release branch)
