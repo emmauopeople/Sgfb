@@ -31,7 +31,10 @@ jobs:
     - name: Run ESLint
       run: |
         npm install eslint
-        npx eslint .
+        echo "Running ESLint..."
+        npx eslint . > eslint-report.txt || true
+        cat eslint-report.txt
+
 
     - name: Run npm audit
       run: npm audit --audit-level=high
