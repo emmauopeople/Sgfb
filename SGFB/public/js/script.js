@@ -6,7 +6,7 @@ const form = document.getElementById('productForm');
 if (form) {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    alert("loaded");
+    
     const formData = new FormData(form);
 
     try {
