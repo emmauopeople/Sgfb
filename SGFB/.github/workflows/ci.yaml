@@ -1,0 +1,66 @@
+name: SGFB CI Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+      - release
+      - main
+  pull_request:
+    branches:
+      - release
+      - main
+
+jobs:
+  lint-and-audit:
+    name: Lint and Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run ESLint
+      run: |
+        npm install eslint
+        npx eslint .
+
+    - name: Run npm audit
+      run: npm audit --audit-level=high
+
+    - name: Check outdated dependencies
+      run: npm outdated || true
+
+  deploy-staging:
+    name: Deploy to Staging (Release branch)
+    needs: lint-and-audit
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/release'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to staging server
+      run: echo "(Here you will deploy to staging server, setup later)"
+
+  deploy-production:
+    name: Deploy to Production (Main branch)
+    needs: lint-and-audit
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to production server
+      run: echo "(Here you will deploy to production server, setup later)"
