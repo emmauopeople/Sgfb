@@ -10,8 +10,12 @@ router.get('/register', (req, res) => {
 
 // Future Routes (Inventory, Update, Report, Sales etc.)
 router.get('/inventory', (req, res) => {
-  res.render('admin/inventory', { layout: 'layouts/admin_dashboard' });
+  res.render('admin/inventory', {
+    layout: 'layouts/admin_dashboard',
+    pageScript: 'inventory_script.js'  // ✅ Only loads on this page
+  });
 });
+
 
 router.get('/update', (req, res) => {
   res.render('admin/update_inventory', { layout: 'layouts/admin_dashboard' });
@@ -24,5 +28,10 @@ router.get('/report', (req, res) => {
 router.get('/sales', (req, res) => {
   res.render('admin/sales_report', { layout: 'layouts/admin_dashboard' });
 });
+
+router.get('/inventory', (req, res) => {
+  res.render('admin/inventory', { layout: 'layouts/admin_dashboard' });
+});
+
 
 export default router;

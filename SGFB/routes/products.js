@@ -52,4 +52,19 @@ router.post('/register', upload.single('product_image'), async (req, res) => {
   }
 });
 
+// GET /products/api - return all products
+router.get('/api', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const [rows] = await connection.query('SELECT * FROM products ORDER BY product_id DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch products' });
+  } finally {
+    connection.release();
+  }
+});
+
+
 export default router;

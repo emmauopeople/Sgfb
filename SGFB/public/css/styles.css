@@ -10,3 +10,17 @@
     color: #212529;
   }
   
+  .table-wrapper {
+    max-height: 500px;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #343a40; /* matches Bootstrap's .table-dark */
+    color: #fff;
+    z-index: 2;
+  }
+  

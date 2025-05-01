@@ -70,5 +70,10 @@
 
   <!-- Custom JS -->
   <script src="/js/script.js"></script>
+
+  <!-- Page-specific scripts -->
+<% if (typeof pageScript !== 'undefined') { %>
+  <script src="/js/<%= pageScript %>"></script>
+<% } %>
 </body>
 </html>
