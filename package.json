@@ -1,0 +1,27 @@
+{
+  "name": "sgfb",
+  "version": "1.0.0",
+  "description": "Smells Good Feel Better (SGFB) e-commerce site",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "express": "^4.18.2",
+    "express-ejs-layouts": "^2.5.1",
+    "multer": "^1.4.5-lts.2",
+    "mysql2": "^3.4.1",
+    "pdfkit": "^0.17.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.25.1"
+  },
+  "keywords": [],
+  "author": "Mbimunyui Emmanuel",
+  "license": "ISC"
+}

@@ -1,0 +1,26 @@
+
+.nav-link:hover {
+    background-color: blue;
+    border-radius: 20px;
+    color: white;
+  }
+  
+  .nav-link.active {
+    font-weight: bold;
+    color: #212529;
+  }
+  
+  .table-wrapper {
+    max-height: 500px;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #343a40; /* matches Bootstrap's .table-dark */
+    color: #fff;
+    z-index: 2;
+  }
+  
