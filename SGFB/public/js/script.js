@@ -23,4 +23,8 @@ if (form) {
       document.getElementById('responseMessage').innerHTML = '<span class="text-danger">❌ Error submitting product, please try again.</span>';
     }
   });
+
+  
+  
 }
+
