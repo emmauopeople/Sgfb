@@ -16,10 +16,21 @@ router.get('/inventory', (req, res) => {
   });
 });
 
+router.get('/update', (req, res) => {
+  res.render('admin/update_inventory', {
+    layout: 'layouts/admin_dashboard',
+    pageScript: 'update_inventory_script.js' // loads your JS dynamically
+  });
+});
+
 
 router.get('/update', (req, res) => {
-  res.render('admin/update_inventory', { layout: 'layouts/admin_dashboard' });
+  res.render('admin/update_inventory', {
+    layout: 'layouts/admin_dashboard',
+    pageScript: 'update_inventory_script.js' // loads your JS dynamically
+  });
 });
+
 
 router.get('/report', (req, res) => {
   res.render('admin/inventory_report', { layout: 'layouts/admin_dashboard' });
