@@ -33,8 +33,12 @@ router.get('/update', (req, res) => {
 
 
 router.get('/report', (req, res) => {
-  res.render('admin/inventory_report', { layout: 'layouts/admin_dashboard' });
+  res.render('admin/report', {
+    layout: 'layouts/admin_dashboard',
+    pageScript: 'report_script.js'
+  });
 });
+
 
 router.get('/sales', (req, res) => {
   res.render('admin/sales_report', { layout: 'layouts/admin_dashboard' });

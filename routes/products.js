@@ -122,4 +122,109 @@ router.delete('/:id', async (req, res) => {
 });
 
 
+// GET /products/report?type=stock|low_stock|valuation
+router.get('/report', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { type } = req.query;
+    const [products] = await connection.query('SELECT product_id, product_name, price, quantity FROM products');
+
+    if (type === 'stock') {
+      res.json(products);
+    } else if (type === 'low_stock') {
+      const lowStock = products.filter(p => p.quantity <= 10);
+      res.json(lowStock);
+    } else if (type === 'valuation') {
+      res.json(products.map(p => ({
+        product_name: p.product_name,
+        price: parseFloat(p.price),
+        quantity: p.quantity
+      })));
+    } else {
+      res.status(400).json({ message: 'Invalid report type' });
+    }
+  } catch (err) {
+    console.error('Report error:', err);
+    res.status(500).json({ message: 'Error generating report' });
+  } finally {
+    connection.release();
+  }
+});
+
+
+// routes/products.js (add this route below the report API)
+
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+
+
+router.get('/report/pdf', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { type } = req.query;
+    const [products] = await connection.query('SELECT product_name, price, quantity FROM products');
+
+    const doc = new PDFDocument({ margin: 40 });
+    const fileName = `${type}_report.pdf`;
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+
+    // Pipe to response
+    doc.pipe(res);
+
+    // Logo
+    const logoPath = path.join('public', 'images', 'logo.jpg');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, { fit: [100, 100], align: 'left' });
+    }
+
+    doc.moveDown();
+    doc.fontSize(18).text('Smells Good Feel Better', { align: 'left' });
+    doc.fontSize(14).text(`${type.replace('_', ' ').toUpperCase()} REPORT`, { align: 'left' });
+    doc.moveDown(1);
+
+    // Table header
+    doc.fontSize(12).text('Product', 50, doc.y, { continued: true })
+      .text('Price ($)', 250, doc.y, { continued: true })
+      .text('Qty', 350, doc.y, { continued: true })
+      .text('Total ($)', 450, doc.y);
+    doc.moveDown(0.5);
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    let total = 0;
+
+    const rows =
+      type === 'low_stock' ? products.filter(p => p.quantity <= 10) :
+      type === 'valuation' ? products :
+      products;
+
+    rows.forEach(p => {
+      const price = parseFloat(p.price);
+      const quantity = parseInt(p.quantity, 10);
+      const value = price * quantity;
+      doc.text(p.product_name, 50, doc.y, { continued: true })
+      .text(`$${price.toFixed(2)}`, 250, doc.y, { continued: true })
+      .text(quantity.toString(), 350, doc.y, { continued: true })
+      .text(`$${value.toFixed(2)}`, 450, doc.y);
+    });
+
+    if (type === 'valuation') {
+      doc.moveDown(1);
+      doc.font('Helvetica-Bold').text('Total Inventory Value:', 350, doc.y, { continued: true })
+        .text(`$${total.toFixed(2)}`, 450, doc.y);
+    }
+
+    doc.end();
+  } catch (err) {
+    console.error('PDF report error:', err);
+    res.status(500).send('Could not generate PDF');
+  } finally {
+    connection.release();
+  }
+});
+
+
+
+
 export default router;
