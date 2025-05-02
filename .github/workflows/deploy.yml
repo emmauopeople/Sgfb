@@ -19,7 +19,7 @@ jobs:
 
     - name: Deploy app to Linode
       run: |
-        ssh ${{ secrets.LINODE_USER }}@${{ secrets.LINODE_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.LINODE_USER }}@${{ secrets.LINODE_HOST }} << 'EOF'
           cd /home/${{ secrets.LINODE_USER }}/sgfb
           git pull origin main
           npm install
