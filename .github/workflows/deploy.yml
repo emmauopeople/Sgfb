@@ -19,9 +19,13 @@ jobs:
 
     - name: Deploy app to Linode
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.LINODE_USER }}@${{ secrets.LINODE_HOST }} << 'EOF'
-          cd /home/${{ secrets.LINODE_USER }}/sgfb
-          git pull origin main
-          npm install
-          pm2 restart sgfb || pm2 start app.js --name sgfb
-        EOF
+    ssh -o StrictHostKeyChecking=no ${{ secrets.LINODE_USER }}@${{ secrets.LINODE_HOST }} << 'EOF'
+      cd ~
+      if [ ! -d "sgfb" ]; then
+        git clone https://github.com/emmauopeople/Sgfb.git sgfb
+      fi
+      cd sgfb
+      git pull origin main
+      npm install
+      pm2 restart sgfb || pm2 start app.js --name sgfb
+    EOF
