@@ -132,7 +132,7 @@ router.post('/login', async (req, res) => {
         console.error('Logout error:', err);
         return res.status(500).send('Logout failed.');
       }
-      res.redirect('/admin'); // go back to login page
+      res.redirect('/'); // go back to login page
     });
   });
   
