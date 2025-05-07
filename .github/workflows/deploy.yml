@@ -17,22 +17,23 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.LINODE_SSH_PRIVATE_KEY }}
 
-      - name: Deploy app to Linode
+      - name: Deploy to Linode
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.LINODE_USER }}@${{ secrets.LINODE_HOST }} << 'EOF'
-            cd ~
-            if [ ! -d "sgfb" ]; then
-              git clone https://github.com/emmauopeople/Sgfb.git sgfb
-            fi
-            cd sgfb
-            git pull origin main
+            cd ~/sgfb || exit 1
+
+            echo "🔄 Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "📦 Installing dependencies..."
             npm install
 
-            # Start or restart both apps
+            echo "🚀 Restarting apps with PM2..."
             pm2 restart sgfb-admin || pm2 start app.js --name sgfb-admin
             pm2 restart sgfb-customer || pm2 start customer_app.js --name sgfb-customer
 
-            # Set up NGINX
+            echo "⚙️  Setting up NGINX config..."
             sudo tee /etc/nginx/sites-available/sgfb << 'NGINX_CONF'
             server {
               listen 80;
@@ -40,11 +41,11 @@ jobs:
 
               location / {
                 proxy_pass http://localhost:3000;
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
                 proxy_http_version 1.1;
                 proxy_set_header Upgrade \$http_upgrade;
                 proxy_set_header Connection 'upgrade';
+                proxy_set_header Host \$host;
+                proxy_cache_bypass \$http_upgrade;
               }
             }
 
@@ -54,15 +55,16 @@ jobs:
 
               location / {
                 proxy_pass http://localhost:3001;
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
                 proxy_http_version 1.1;
                 proxy_set_header Upgrade \$http_upgrade;
                 proxy_set_header Connection 'upgrade';
+                proxy_set_header Host \$host;
+                proxy_cache_bypass \$http_upgrade;
               }
             }
             NGINX_CONF
 
+            echo "🔁 Reloading NGINX..."
             sudo ln -sf /etc/nginx/sites-available/sgfb /etc/nginx/sites-enabled/sgfb
             sudo nginx -t && sudo systemctl reload nginx
           EOF
