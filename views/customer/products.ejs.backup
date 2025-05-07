@@ -1,0 +1,25 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">All Products</h2>
+  <div class="row">
+    <% products.forEach(product => { %>
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <img src="/images/<%= product.image_name %>" class="card-img-top" alt="<%= product.product_name %>">
+          <div class="card-body">
+            <h5 class="card-title"><%= product.product_name %></h5>
+            <p class="card-text"><%= product.product_description %></p>
+            <p><strong>$<%= product.price %></strong></p>
+            <button class="btn btn-primary">Add to Cart</button>
+            <button class="btn btn-outline-success">Buy Now</button>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<div id="modalContainer"></div>
+
+
+<%- include('partials/footer') %>

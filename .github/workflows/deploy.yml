@@ -27,5 +27,42 @@ jobs:
             cd sgfb
             git pull origin main
             npm install
-            pm2 restart sgfb || pm2 start app.js --name sgfb
+
+            # Start or restart both apps
+            pm2 restart sgfb-admin || pm2 start app.js --name sgfb-admin
+            pm2 restart sgfb-customer || pm2 start customer_app.js --name sgfb-customer
+
+            # Set up NGINX
+            sudo tee /etc/nginx/sites-available/sgfb << 'NGINX_CONF'
+            server {
+              listen 80;
+              server_name admin.smellsgoodfeelbeter.com;
+
+              location / {
+                proxy_pass http://localhost:3000;
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade \$http_upgrade;
+                proxy_set_header Connection 'upgrade';
+              }
+            }
+
+            server {
+              listen 80;
+              server_name www.smellsgoodfeelbeter.com;
+
+              location / {
+                proxy_pass http://localhost:3001;
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade \$http_upgrade;
+                proxy_set_header Connection 'upgrade';
+              }
+            }
+            NGINX_CONF
+
+            sudo ln -sf /etc/nginx/sites-available/sgfb /etc/nginx/sites-enabled/sgfb
+            sudo nginx -t && sudo systemctl reload nginx
           EOF

@@ -45,7 +45,7 @@ app.use('/products', productsRouter);
 
 
 // admin login page and registdration
-app.get("/admin", (req, res) => {
+app.get("/", (req, res) => {
   res.render('admin/admin_login', { layout: false });
 });
 
@@ -55,9 +55,9 @@ app.use('/admin-auth', adminAuthRouter);
 
 
 // Root route (home page for now)
-app.get('/', (req, res) => {
-  res.render('index'); // We will create views/index.ejs later
-});
+//app.get('/', (req, res) => {
+ // res.render('index'); // We will create views/index.ejs later
+//});
 
 //Admin dashboard route
 
