@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import adminRouter from './routes/admin.js';
 dotenv.config();
 import expressLayouts from 'express-ejs-layouts';
+import session from 'express-session';
 const app = express();
 
 // Middleware
@@ -22,6 +23,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Session control
+
+app.use(session({
+  secret: 'sgfb_secret_key',       // use environment variable in production
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 1000 * 60 * 60 }  // 1 hour
+}));
+
 
 
 app.use(expressLayouts);
@@ -31,6 +41,18 @@ app.set('layout', 'layouts/admin_dashboard'); // default layout
 
 // Routes
 app.use('/products', productsRouter);
+
+
+
+// admin login page and registdration
+app.get("/admin", (req, res) => {
+  res.render('admin/admin_login', { layout: false });
+});
+
+import adminAuthRouter from './routes/admin_auth.js';
+app.use('/admin-auth', adminAuthRouter);
+
+
 
 // Root route (home page for now)
 app.get('/', (req, res) => {
@@ -42,6 +64,8 @@ app.get('/', (req, res) => {
 
 // Admin Dashboard Routes
 app.use('/admin', adminRouter);
+
+
 
 
 // Start the server
