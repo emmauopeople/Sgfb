@@ -46,7 +46,7 @@ app.use('/products', productsRouter);
 
 // admin login page and registdration
 app.get("/", (req, res) => {
-  res.render('admin/admin_login', { layout: false });
+  res.render('index', { layout: false });
 });
 
 import adminAuthRouter from './routes/admin_auth.js';

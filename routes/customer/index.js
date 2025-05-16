@@ -2,6 +2,7 @@
 
 import express from 'express';
 import pool from '../../db.js';
+import nodemailer from "nodemailer";
 
 const router = express.Router();
 
@@ -45,6 +46,40 @@ router.get('/', async (req, res) => {
         }
       });
       
-      
-
+      // route for emails
+      router.post("/sendmail", async (req, res) => {
+        const { customerEmail, subject, text } = req.body;
+    
+        if (!customerEmail || !subject || !text) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+    
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "smellsgoodfeelbetter@gmail.com",
+                pass: "jwlsonejcrpxvxid"
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
+    
+        const mailOptions = {
+            from: "smellsgoodfeelbetter@gmail.com", // sender (store)
+            to: "smellsgoodfeelbetter@gmail.com",   // recipient (store)
+            subject: `[Customer Message] ${subject}`,
+            text: `Message from: ${customerEmail}\n\n${text}`,
+            replyTo: customerEmail // if store owner replies, it goes to the customer
+        };
+    
+        try {
+            await transporter.sendMail(mailOptions);
+            res.status(200).json({ message: "Message sent to store owner!" });
+        } catch (error) {
+            console.error("Error sending email:", error);
+            res.status(500).json({ error: "Failed to send message" });
+        }
+    });
+    
 export default router;
