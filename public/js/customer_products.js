@@ -48,5 +48,36 @@ document.addEventListener("DOMContentLoaded", () => {
         card.style.display = name.includes(value) ? "block" : "none";
       });
     });
+
+    //sending email
+    document.getElementById("email_form").addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent default form submission
+        alert('script is on');
+      const email = document.getElementById("email").value;
+      const message = document.getElementById("message").value;
+  
+      if (!email || !message) {
+          alert("Please fill in all fields.");
+          return;
+      }
+  
+      // Send data using Axios
+      axios.post("/sendmail", {
+        customerEmail: email,
+          subject: "Message from Contact Form",
+          text: message
+      })
+      .then(response => {
+          alert("Email sent successfully!");
+          document.getElementById("email_form").reset(); // Clear form
+      })
+      .catch(error => {
+          console.error("Error sending email:", error);
+          alert("Failed to send email. Please try again.");
+      });
   });
+  
+  });
+
+
   
