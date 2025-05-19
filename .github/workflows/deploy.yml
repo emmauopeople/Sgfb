@@ -26,8 +26,13 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            echo "📦 Installing dependencies..."
-            npm install
+            echo "🧹 Removing node_modules if permission issues exist..."
+            find node_modules -type f ! -user $(whoami) -exec rm -f {} \;
+            find node_modules -type d ! -user $(whoami) -exec rm -rf {} \; || true
+            rm -rf package-lock.json
+
+            echo "📦 Installing dependencies as current user..."
+            npm install --unsafe-perm=true
 
             echo "🚀 Restarting apps with PM2..."
             pm2 restart sgfb-admin || pm2 start app.js --name sgfb-admin
