@@ -52,12 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
     //sending email
     document.getElementById("email_form").addEventListener("submit", function (event) {
       event.preventDefault(); // Prevent default form submission
-        alert('script is on');
+        
       const email = document.getElementById("email").value;
       const message = document.getElementById("message").value;
   
       if (!email || !message) {
-          alert("Please fill in all fields.");
+          alert("Please fill in all fields to manager.");
           return;
       }
   
