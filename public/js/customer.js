@@ -96,6 +96,56 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Error sending email:", error);
         alert("Failed to send email. Please try again.");
     });
+
+    // creating the shopping cart
+    let cart = [];
+
+document.getElementById('addToCartBtn').addEventListener('click', () => {
+  const productId = document.getElementById('addToCartBtn').dataset.productId;
+
+  // Check if product already in cart
+  const existing = cart.find(item => item.id === productId);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ id: productId, quantity: 1 });
+  }
+
+  // Update cart badge
+  document.getElementById('cartCount').textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+});
+
+// Load cart modal content
+document.getElementById('cartIcon').addEventListener('click', async () => {
+  const container = document.getElementById('cartItemsContainer');
+  container.innerHTML = '';
+
+  for (let item of cart) {
+    const response = await axios.get(`/products/${item.id}`);
+    const product = response.data;
+
+    container.innerHTML += `
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div><strong>${product.product_name}</strong><br>$${product.price}</div>
+        <div>
+          <input type="number" value="${item.quantity}" min="1" class="form-control quantity-input" data-id="${item.id}">
+        </div>
+      </div>
+    `;
+  }
+
+  // Attach quantity change handler
+  document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      const qty = parseInt(e.target.value);
+      const item = cart.find(i => i.id === id);
+      if (item) item.quantity = qty;
+      document.getElementById('cartCount').textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+    });
+  });
+});
+
 });
 
   
