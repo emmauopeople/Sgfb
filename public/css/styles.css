@@ -23,4 +23,10 @@
     color: #fff;
     z-index: 2;
   }
+  nav {
+  position: sticky;
+  top: 0; /* Sticks the navbar to the top */
+  background-color: white; /* Adjust as needed */
+  z-index: 1000; /* Ensures it stays above other elements */
+}
   

@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     const buttons = document.querySelectorAll(".buy-now-btn");
     const modalContainer = document.getElementById("modalContainer");
+    //test if cart count can be updated.
+    
   
     buttons.forEach(button => {
       button.addEventListener("click", async () => {
@@ -120,7 +122,7 @@ document.getElementById('cartIcon').addEventListener('click', async () => {
         container.innerHTML += `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                    <img src="/images/${product.image_name}" class="img-fluid" style="width: 50px; height: auto;" alt="${product.product_name}">
+                    <img src="/images/${product.image_name}" class="img-fluid" style="width: 100px; height: 100px;" alt="${product.product_name}">
                 </div>
                 <div><strong>${product.product_name}</strong><br>$${product.price}</div>
                 <div>
