@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint Quality Scan
-        run: npx eslint . || true
+        run: npx eslint --fix . || true
 
       - name: Run Snyk Dependency Scan
         uses: snyk/actions/node@master
