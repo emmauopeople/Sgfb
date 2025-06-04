@@ -1,38 +1,39 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const buyButtons = document.querySelectorAll('.buy-now-btn');
-    
-  
-    buyButtons.forEach(button => {
-      button.addEventListener('click', async () => {
-        
-        const productId = button.dataset.productId;
-        
-  
-        try {
-          const response = await axios.get(`/products/${productId}`);
-          const product = response.data;
-          
-  
-          // Populate modal fields
-          document.getElementById('modalProductName').textContent = product.product_name;
-          document.getElementById('modalProductPrice').textContent = `$${parseFloat(product.price).toFixed(2)}`;
-          document.getElementById('modalProductImage').src = `/images/${product.image_name}`;
-  
-          // Show modal
-          
-          const productModal = new bootstrap.Modal(document.getElementById('productModal'));
-          productModal.show();
-        } catch (error) {
-          console.error('❌ Error fetching product:', error);
-        }
-      });
-    });
+document.addEventListener("DOMContentLoaded", () => {
+  const buyButtons = document.querySelectorAll(".buy-now-btn");
 
-    //handle products view for customers
-    const buttons = document.querySelectorAll(".buy-now-btn");
+  buyButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const productId = button.dataset.productId;
+
+      try {
+        const response = await axios.get(`/products/${productId}`);
+        const product = response.data;
+
+        // Populate modal fields
+        document.getElementById("modalProductName").textContent =
+          product.product_name;
+        document.getElementById("modalProductPrice").textContent =
+          `$${parseFloat(product.price).toFixed(2)}`;
+        document.getElementById("modalProductImage").src =
+          `/images/${product.image_name}`;
+
+        // Show modal
+
+        const productModal = new bootstrap.Modal(
+          document.getElementById("productModal"),
+        );
+        productModal.show();
+      } catch (error) {
+        console.error("❌ Error fetching product:", error);
+      }
+    });
+  });
+
+  //handle products view for customers
+  const buttons = document.querySelectorAll(".buy-now-btn");
   const modalContainer = document.getElementById("modalContainer");
 
-  buttons.forEach(button => {
+  buttons.forEach((button) => {
     button.addEventListener("click", async () => {
       const id = button.dataset.productId;
 
@@ -50,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="modal-body text-center">
                   <img src="/images/${product.image_name}" class="img-fluid mb-3">
-                  <p>${product.description || 'Elegant fragrance for all occasions.'}</p>
+                  <p>${product.description || "Elegant fragrance for all occasions."}</p>
                   <p class="fw-bold">Price: $${parseFloat(product.price).toFixed(2)}</p>
                 </div>
                 <div class="modal-footer">
@@ -68,63 +69,70 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-  });
+});
 
-  //sending emails
-  document.getElementById("email_form").addEventListener("submit", function (event) {
+//sending emails
+document
+  .getElementById("email_form")
+  .addEventListener("submit", function (event) {
     event.preventDefault(); // Prevent default form submission
 
     const email = document.getElementById("email").value;
     const message = document.getElementById("message").value;
 
     if (!email || !message) {
-        alert("Please fill in all fields.");
-        return;
+      alert("Please fill in all fields.");
+      return;
     }
 
     // Send data using Axios
-    axios.post("/sendmail", {
+    axios
+      .post("/sendmail", {
         customerEmail: email,
         subject: "Message from Contact Form",
-        text: message
-    })
-    .then(response => {
+        text: message,
+      })
+      .then((response) => {
         alert("Email sent successfully!");
         document.getElementById("email_form").reset(); // Clear form
-    })
-    .catch(error => {
+      })
+      .catch((error) => {
         console.error("Error sending email:", error);
         alert("Failed to send email. Please try again.");
-    });
+      });
 
     // creating the shopping cart
     let cart = [];
 
-document.getElementById('addToCartBtn').addEventListener('click', () => {
-  const productId = document.getElementById('addToCartBtn').dataset.productId;
+    document.getElementById("addToCartBtn").addEventListener("click", () => {
+      const productId =
+        document.getElementById("addToCartBtn").dataset.productId;
 
-  // Check if product already in cart
-  const existing = cart.find(item => item.id === productId);
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.push({ id: productId, quantity: 1 });
-  }
+      // Check if product already in cart
+      const existing = cart.find((item) => item.id === productId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ id: productId, quantity: 1 });
+      }
 
-  // Update cart badge
-  document.getElementById('cartCount').textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
-});
+      // Update cart badge
+      document.getElementById("cartCount").textContent = cart.reduce(
+        (sum, i) => sum + i.quantity,
+        0,
+      );
+    });
 
-// Load cart modal content
-document.getElementById('cartIcon').addEventListener('click', async () => {
-  const container = document.getElementById('cartItemsContainer');
-  container.innerHTML = '';
+    // Load cart modal content
+    document.getElementById("cartIcon").addEventListener("click", async () => {
+      const container = document.getElementById("cartItemsContainer");
+      container.innerHTML = "";
 
-  for (let item of cart) {
-    const response = await axios.get(`/products/${item.id}`);
-    const product = response.data;
+      for (let item of cart) {
+        const response = await axios.get(`/products/${item.id}`);
+        const product = response.data;
 
-    container.innerHTML += `
+        container.innerHTML += `
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div><strong>${product.product_name}</strong><br>$${product.price}</div>
         <div>
@@ -132,20 +140,20 @@ document.getElementById('cartIcon').addEventListener('click', async () => {
         </div>
       </div>
     `;
-  }
+      }
 
-  // Attach quantity change handler
-  document.querySelectorAll('.quantity-input').forEach(input => {
-    input.addEventListener('change', e => {
-      const id = e.target.dataset.id;
-      const qty = parseInt(e.target.value);
-      const item = cart.find(i => i.id === id);
-      if (item) item.quantity = qty;
-      document.getElementById('cartCount').textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+      // Attach quantity change handler
+      document.querySelectorAll(".quantity-input").forEach((input) => {
+        input.addEventListener("change", (e) => {
+          const id = e.target.dataset.id;
+          const qty = parseInt(e.target.value);
+          const item = cart.find((i) => i.id === id);
+          if (item) item.quantity = qty;
+          document.getElementById("cartCount").textContent = cart.reduce(
+            (sum, i) => sum + i.quantity,
+            0,
+          );
+        });
+      });
     });
   });
-});
-
-});
-
-  

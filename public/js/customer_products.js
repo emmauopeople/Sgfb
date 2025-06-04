@@ -1,17 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const buttons = document.querySelectorAll(".buy-now-btn");
-    const modalContainer = document.getElementById("modalContainer");
-    //test if cart count can be updated.
-    
-  
-    buttons.forEach(button => {
-      button.addEventListener("click", async () => {
-        const id = button.dataset.productId;
-        try {
-          const res = await axios.get(`/products/${id}`);
-          const product = res.data;
+  const buttons = document.querySelectorAll(".buy-now-btn");
+  const modalContainer = document.getElementById("modalContainer");
+  //test if cart count can be updated.
 
-          modalContainer.innerHTML = `
+  buttons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = button.dataset.productId;
+      try {
+        const res = await axios.get(`/products/${id}`);
+        const product = res.data;
+
+        modalContainer.innerHTML = `
             <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
               <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -33,93 +32,98 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </div>
           `;
-  
-          new bootstrap.Modal(document.getElementById("productModal")).show();
-        } catch (err) {
-          console.error("Failed to load product modal", err);
-        }
-      });
-    });
-  
-    // Filter and search functionality
-    const searchInput = document.getElementById("searchInput");
-    const productCards = document.querySelectorAll(".product-card");
-  
-    searchInput.addEventListener("input", () => {
-      const value = searchInput.value.toLowerCase();
-      productCards.forEach(card => {
-        const name = card.dataset.name;
-        card.style.display = name.includes(value) ? "block" : "none";
-      });
-    });
 
-    //sending email
-    document.getElementById("email_form").addEventListener("submit", function (event) {
-      event.preventDefault(); // Prevent default form submission
-        
-      const email = document.getElementById("email").value;
-      const message = document.getElementById("message").value;
-  
-      if (!email || !message) {
-          alert("Please fill in all fields to manager.");
-          return;
+        new bootstrap.Modal(document.getElementById("productModal")).show();
+      } catch (err) {
+        console.error("Failed to load product modal", err);
       }
-  
-      // Send data using Axios
-      axios.post("/sendmail", {
-        customerEmail: email,
-          subject: "Message from Contact Form",
-          text: message
-      })
-      .then(response => {
-          alert("Email sent successfully!");
-          document.getElementById("email_form").reset(); // Clear form
-      })
-      .catch(error => {
-          console.error("Error sending email:", error);
-          alert("Failed to send email. Please try again.");
-      });
+    });
   });
 
-//persisting card data
-// Load cart from storage when the page loads
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  // Filter and search functionality
+  const searchInput = document.getElementById("searchInput");
+  const productCards = document.querySelectorAll(".product-card");
 
-// Save cart data to local storage after every update
-function saveCart() {
+  searchInput.addEventListener("input", () => {
+    const value = searchInput.value.toLowerCase();
+    productCards.forEach((card) => {
+      const name = card.dataset.name;
+      card.style.display = name.includes(value) ? "block" : "none";
+    });
+  });
+
+  //sending email
+  document
+    .getElementById("email_form")
+    .addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent default form submission
+
+      const email = document.getElementById("email").value;
+      const message = document.getElementById("message").value;
+
+      if (!email || !message) {
+        alert("Please fill in all fields to manager.");
+        return;
+      }
+
+      // Send data using Axios
+      axios
+        .post("/sendmail", {
+          customerEmail: email,
+          subject: "Message from Contact Form",
+          text: message,
+        })
+        .then((response) => {
+          alert("Email sent successfully!");
+          document.getElementById("email_form").reset(); // Clear form
+        })
+        .catch((error) => {
+          console.error("Error sending email:", error);
+          alert("Failed to send email. Please try again.");
+        });
+    });
+
+  //persisting card data
+  // Load cart from storage when the page loads
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  // Save cart data to local storage after every update
+  function saveCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
-}
-document.addEventListener("click", (event) => {
+  }
+  document.addEventListener("click", (event) => {
     if (event.target && event.target.id === "addToCartBtn") {
-        const productId = event.target.dataset.productId;
+      const productId = event.target.dataset.productId;
 
-        // Check if product already in cart
-        const existing = cart.find(item => item.id === productId);
-        if (existing) {
-            existing.quantity += 1;
-        } else {
-            cart.push({ id: productId, quantity: 1 });
-        }
+      // Check if product already in cart
+      const existing = cart.find((item) => item.id === productId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ id: productId, quantity: 1 });
+      }
 
-        saveCart(); // Persist cart data
+      saveCart(); // Persist cart data
 
-        // Update cart badge count
-        document.getElementById('cartCount').textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+      // Update cart badge count
+      document.getElementById("cartCount").textContent = cart.reduce(
+        (sum, i) => sum + i.quantity,
+        0,
+      );
 
-        // Close the cart modal
-        
+      // Close the cart modal
     }
-});
+  });
 
-document.getElementById('cartIcon').addEventListener('click', async () => {
-    const container = document.getElementById('cartItemsContainer');
-    container.innerHTML = '';
+  document.getElementById("cartIcon").addEventListener("click", async () => {
+    const container = document.getElementById("cartItemsContainer");
+    container.innerHTML = "";
 
     for (let item of cart) {
-        const response = await axios.get(`/products/${item.id}`);
-        const product = response.data;
+      const response = await axios.get(`/products/${item.id}`);
+      const product = response.data;
 
-        container.innerHTML += `
+      container.innerHTML += `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <img src="/images/${product.image_name}" class="img-fluid" style="width: 100px; height: 100px;" alt="${product.product_name}">
@@ -133,28 +137,18 @@ document.getElementById('cartIcon').addEventListener('click', async () => {
     }
 
     // Attach quantity change handler dynamically
-    document.querySelectorAll('.quantity-input').forEach(input => {
-        input.addEventListener('change', (e) => {
-            const id = e.target.dataset.id;
-            const qty = parseInt(e.target.value);
-            const item = cart.find(i => i.id === id);
-            if (item) item.quantity = qty;
-            saveCart(); // Save changes to localStorage
-            document.getElementById('cartCount').textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
-        });
+    document.querySelectorAll(".quantity-input").forEach((input) => {
+      input.addEventListener("change", (e) => {
+        const id = e.target.dataset.id;
+        const qty = parseInt(e.target.value);
+        const item = cart.find((i) => i.id === id);
+        if (item) item.quantity = qty;
+        saveCart(); // Save changes to localStorage
+        document.getElementById("cartCount").textContent = cart.reduce(
+          (sum, i) => sum + i.quantity,
+          0,
+        );
+      });
     });
-});
-
-
-
-  
-
-  
-
-
-
-  
   });
-
-
-  
+});
