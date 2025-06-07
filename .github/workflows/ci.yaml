@@ -60,12 +60,12 @@ jobs:
 
       - name: Start App in Background for ZAP Scan
         run: |
-          npm run start & sleep 10
+          npm run start & npm run customer_start & sleep 20
 
       - name: OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
-          target: "http://localhost:3000"
+          target: "http://localhost:3000,http://localhost:3001"
         continue-on-error: true
 
   test:
