@@ -48,14 +48,15 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: SonarQube Analysis test
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: sonarsource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: "https://sonarcloud.io"
-          SONAR_PROJECT_KEY: "emmauopeople/Sgfb"
-          SONAR_ORGANIZATION: "emmauopeople"
+          GIT_TOKEN: ${{secrets.GIT_TOKEN}}
+          
         with:
-          projectBaseDir: .
+          args: >
+              -Dsonar.organization=emmauopeople
+              -Dsonar.projectKey=Sgfb
 
       - name: Start App in Background for ZAP Scan
         run: |
