@@ -46,17 +46,17 @@ jobs:
         run: npx snyk test || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: SonarQube Analysis test
-        uses: sonarsource/sonarcloud-github-action@master
+      - name: SonarQube Analysis
+        uses: SonarSource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GIT_TOKEN: ${{secrets.GIT_TOKEN}}
-          
+          SONAR_HOST_URL: "https://sonarcloud.io"
+          SONAR_PROJECT_KEY: "emmauopeople_sgfb-project"
+          SONAR_ORGANIZATION: "emmauopeople"
         with:
-          args: >
-              -Dsonar.organization=emmauopeople
-              -Dsonar.projectKey=emmauopeople-project
+          projectBaseDir: .
+
+     
 
       - name: Start App in Background for ZAP Scan
         run: |
