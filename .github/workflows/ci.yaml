@@ -69,10 +69,18 @@ jobs:
       - name: OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
-          target: "http://localhost:3000,http://localhost:3001"
+          target: "http://localhost:3000"
         env:
           GIT_TOKEN: ${{secrets.GIT_TOKEN}}
         continue-on-error: true
+      - name: OWASP ZAP Security Scan (Customer App)
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          target: "http://localhost:3001"
+        env:
+          GIT_TOKEN: ${{secrets.GIT_TOKEN}}
+        continue-on-error: true
+
 
   test:
     needs: build
