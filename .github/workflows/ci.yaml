@@ -62,6 +62,10 @@ jobs:
         run: |
           npm run start & npm run customer_start & sleep 20
 
+      - name: Check Docker Status
+        run: |
+          docker ps
+
       - name: OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
