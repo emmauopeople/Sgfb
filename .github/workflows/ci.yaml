@@ -62,23 +62,19 @@ jobs:
         run: |
           npm run start & npm run customer_start & sleep 20
 
-      - name: Check Docker Status
-        run: |
-          docker ps -a
-
       - name: OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           target: "http://localhost:3000"
         env:
-          GIT_TOKEN: ${{secrets.GIT_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.GIT_TOKEN}}
         continue-on-error: true
       - name: OWASP ZAP Security Scan (Customer App)
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           target: "http://localhost:3001"
         env:
-          GIT_TOKEN: ${{secrets.GIT_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.GIT_TOKEN}}
         continue-on-error: true
 
 
