@@ -64,7 +64,7 @@ jobs:
 
       - name: Check Docker Status
         run: |
-          docker ps
+          docker ps -a
 
       - name: OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.8.0
