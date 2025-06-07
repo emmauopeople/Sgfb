@@ -56,7 +56,7 @@ jobs:
         with:
           args: >
               -Dsonar.organization=emmauopeople
-              -Dsonar.projectKey=Sgfb
+              -Dsonar.projectKey=emmauopeople-project
 
       - name: Start App in Background for ZAP Scan
         run: |
