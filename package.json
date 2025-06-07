@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "customer_start": "node customer_app.js"
+    "customer_start": "node customer_app.js",
+    "test": "jest --coverage"
+
   },
   "dependencies": {
     "axios": "^1.9.0",
