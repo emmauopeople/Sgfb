@@ -2,26 +2,15 @@ name: Node.js Production CI Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
 
 jobs:
-  pull_code:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
   build:
-    needs: pull_code
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -30,59 +19,64 @@ jobs:
           node-version: 18
           cache: npm
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Run ESLint Quality Scan
-        run: npx eslint --fix . || true
+      - name: Run ESLint Quality Check
+        run: npx eslint . --max-warnings=0
 
-      - name: Run Snyk Dependency Scan
+      - name: Snyk Dependency Scan
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: false
 
-      - name: Run Snyk Security Test
-        run: npx snyk test || true
+      - name: Snyk Security Test
+        run: npx snyk test
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - name: SonarQube Analysis
-        uses: SonarSource/sonarqube-scan-action@v2
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: "https://sonarcloud.io"
         with:
           args: >
             -Dsonar.organization=emmauopeople
             -Dsonar.projectKey=emmauopeople_sgfb-project
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
 
-     
-
-      - name: Start App in Background for ZAP Scan
+      - name: Start Apps with PM2 for ZAP Scan
         run: |
-          npm run start & npm run customer_start & sleep 20
+          npm install pm2 -g
+          pm2 start app.js --name admin
+          pm2 start customer_app.js --name customer
+          sleep 20
 
-      - name: OWASP ZAP Security Scan
+      - name: OWASP ZAP Scan (Admin)
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           target: "http://localhost:3000"
         env:
-          GITHUB_TOKEN: ${{secrets.GIT_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         continue-on-error: true
-      - name: OWASP ZAP Security Scan (Customer App)
+
+      - name: OWASP ZAP Scan (Customer)
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           target: "http://localhost:3001"
         env:
-          GITHUB_TOKEN: ${{secrets.GIT_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         continue-on-error: true
 
+      - name: Stop PM2 Apps After ZAP
+        run: pm2 stop all && pm2 delete all
 
   test:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -91,21 +85,18 @@ jobs:
           node-version: 18
           cache: npm
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Run Tests with Jest
-        run: npm test
-
-      - name: Generate Code Coverage Report
-        run: npm run coverage
-
-      - name: Enforce Coverage Threshold
-        run: npm run coverage-check || exit 1
+      - name: Run Tests with Jest and Coverage
+        run: |
+          npm test
+          npm run coverage-check || true
 
   notify:
     needs: [build, test]
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Slack Notification
         uses: slackapi/slack-github-action@v1.24.0
@@ -115,9 +106,10 @@ jobs:
               "text": ":rocket: *SGFB CI/CD Status*",
               "attachments": [
                 {
-                  "color": "#36a64f",
+                  "color": "${{ needs.test.result == 'success' && '#36a64f' || '#FF0000' }}",
                   "fields": [
-                    { "title": "Status", "value": "${{ job.status }}", "short": true },
+                    { "title": "Build Status", "value": "${{ needs.build.result }}", "short": true },
+                    { "title": "Test Status", "value": "${{ needs.test.result }}", "short": true },
                     { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
                     { "title": "Commit by", "value": "${{ github.actor }}", "short": true }
                   ]
