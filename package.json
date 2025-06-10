@@ -8,6 +8,7 @@
     "start": "node app.js",
     "customer_start": "node customer_app.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --coverage",
+    "coverage": "npm test",
     "coverage-check": "jest --coverage --coverageThreshold='{\"global\": {\"branches\":80,\"functions\":80,\"lines\":80,\"statements\":80}}'"
 
   },
