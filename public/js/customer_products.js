@@ -151,4 +151,49 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
+
+  //adding script for inquery modal
+  const buyButtons = document.querySelectorAll('.buy-now-btn');
+
+buyButtons.forEach(button => {
+  button.addEventListener('click', async () => {
+    const productId = button.dataset.productId;
+    try {
+      const res = await axios.get(`/products/${productId}`);
+      const product = res.data;
+
+      // Populate modal
+      document.getElementById('modalName').textContent = product.product_name;
+      document.getElementById('modalPrice').textContent = `$${parseFloat(product.price).toFixed(2)}`;
+      document.getElementById('modalImage').src = `/images/${product.image_name}`;
+      document.getElementById('productNameHidden').value = product.product_name;
+
+      // Reset feedback
+      document.getElementById('inquirySuccess').classList.add('d-none');
+      document.getElementById('inquiryError').classList.add('d-none');
+
+      new bootstrap.Modal(document.getElementById('productModal')).show();
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
+  });
+});
+
+document.getElementById('inquiryForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const customerEmail = document.getElementById('customerEmail').value;
+  const message = document.getElementById('message').value;
+  const productName = document.getElementById('productNameHidden').value;
+
+  try {
+    const res = await axios.post('/sendmail', { customerEmail, message, productName });
+    if (res.status === 200) {
+      document.getElementById('inquirySuccess').classList.remove('d-none');
+    }
+  } catch (err) {
+    document.getElementById('inquiryError').classList.remove('d-none');
+    console.error(err);
+  }
+});
+
 });
