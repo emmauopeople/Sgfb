@@ -51,9 +51,8 @@ router.get("/customer_products", async (req, res) => {
 
 // route for emails
 router.post("/sendmail", async (req, res) => {
-  const { customerEmail, subject, text } = req.body;
-
-  if (!customerEmail || !subject || !text) {
+  const { customerEmail, productName, message } = req.body;
+  if (!customerEmail || !productName || !message) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -71,8 +70,8 @@ router.post("/sendmail", async (req, res) => {
   const mailOptions = {
     from: "smellsgoodfeelbetter@gmail.com", // sender (store)
     to: "smellsgoodfeelbetter@gmail.com", // recipient (store)
-    subject: `[Customer Message] ${subject}`,
-    text: `Message from: ${customerEmail}\n\n${text}`,
+    subject: `Product Inquiry: ${productName}`,
+    text: `Customer Email: ${customerEmail}\n\nMessage:\n${message}`,
     replyTo: customerEmail, // if store owner replies, it goes to the customer
   };
 
