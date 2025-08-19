@@ -29,8 +29,9 @@
           <div class="card-body text-center">
             <h6 class="card-title mb-1"><%= product.product_name %></h6>
             <p class="card-text text-muted">$<%= parseFloat(product.price).toFixed(2) %></p>
-            <button class="btn btn-outline-dark buy-now-btn" data-product-id="<%= product.product_id %>">Buy Now</button>
-
+            <button class="btn btn-outline-dark buy-now-btn" data-product-id="<%= product.product_id %>">
+                Inquire
+            </button>
 
           </div>
         </div>
@@ -40,24 +41,43 @@
 </div>
 
 <!-- Modal -->
+
+
+  <!-- Inquiry Modal -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalProductName">Product Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body text-center">
-          <img id="modalProductImage" src="" class="img-fluid mb-3" style="max-height: 200px;" alt="Product Image">
-          <h5 id="modalProductName"></h5>
-          <p id="modalProductPrice" class="fw-bold"></p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-dark">Checkout with PayPal</button>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="productModalLabel">Product Inquiry</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <img id="modalImage" src="" class="img-fluid" alt="Product Image">
+          </div>
+          <div class="col-md-6">
+            <h5 id="modalName"></h5>
+            <p id="modalPrice" class="fw-bold text-danger"></p>
+            <form id="inquiryForm">
+              <div class="mb-2">
+                <input type="email" class="form-control" id="customerEmail" placeholder="Your Email" required>
+              </div>
+              <div class="mb-2">
+                <textarea class="form-control" id="message" rows="3" placeholder="Your Message..." required></textarea>
+              </div>
+              <input type="hidden" id="productNameHidden">
+              <button type="submit" class="btn btn-dark">Send Inquiry</button>
+              <div id="inquirySuccess" class="text-success mt-2 d-none">Inquiry sent!</div>
+              <div id="inquiryError" class="text-danger mt-2 d-none">Something went wrong. Try again.</div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
+
 
 <%- include('partials/footer') %>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
