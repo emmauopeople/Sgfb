@@ -1,15 +1,44 @@
 <%- include('partials/header') %>
 
+<style>
+  /* Page-specific tweaks */
+  .hero-banner {
+    background-image: url('/images/cosmetics-banner.jpeg');
+    background-size: cover;
+    background-position: center;
+    min-height: 300px;
+  }
+  .hero-overlay {
+    background: rgba(0,0,0,.5);
+    border-radius: .5rem;
+  }
+  /* Horizontal swipe: one card per view on phones */
+  .h-scroll {
+    scroll-snap-type: x mandatory;
+  }
+  .h-scroll .card {
+    scroll-snap-align: start;
+    min-width: 85vw;           /* show ~one card at a time on phones */
+  }
+  .h-scroll .card img {
+    height: 150px;
+    object-fit: cover;
+  }
+  @media (min-width: 576px) {
+    .h-scroll .card { min-width: 240px; } /* wider screens see more cards */
+  }
+</style>
+
 <div class="container-fluid p-0">
   <div class="container mt-4">
     <div class="row m-0 g-0">
       <div class="col-md-4 d-flex align-items-center justify-content-center bg-white">
         <img src="/images/logo.jpg" alt="SGFB Logo" class="w-100 h-100" style="object-fit: cover;">
       </div>
-      <div class="col-md-8 position-relative p-0" style="background-image: url('/images/cosmetics-banner.jpeg'); background-size: cover; background-position: center; min-height: 300px;">
-        <div class="position-absolute top-50 start-50 translate-middle text-white text-center bg-dark bg-opacity-50 p-4 rounded">
-          <h1>Smells Good, Feel Better</h1>
-          <p>Discover premium cosmetics and fragrances just for you</p>
+      <div class="col-md-8 position-relative p-0 hero-banner">
+        <div class="position-absolute top-50 start-50 translate-middle text-white text-center p-4 hero-overlay">
+          <h1 class="h3 h-md-1">Smells Good, Feel Better</h1>
+          <p class="mb-0">Discover premium cosmetics and fragrances just for you</p>
         </div>
       </div>
     </div>
@@ -22,17 +51,16 @@
   <!-- Product Cards -->
   <div class="container my-4">
     <h4 class="mb-3">Featured Products</h4>
-    <div class="d-flex overflow-auto gap-3 px-2" style="scroll-snap-type: x mandatory;">
+    <div class="d-flex overflow-auto gap-3 px-2 h-scroll" aria-label="Featured products">
       <% products.forEach(product => { %>
-        <div class="card flex-shrink-0" style="min-width: 220px; scroll-snap-align: start;">
-          <img src="/images/<%= product.image_name %>" class="card-img-top" alt="<%= product.product_name %>" style="height: 150px; object-fit: cover;">
+        <div class="card flex-shrink-0">
+          <img src="/images/<%= product.image_name %>" class="card-img-top" alt="<%= product.product_name %>">
           <div class="card-body text-center">
             <h6 class="card-title mb-1"><%= product.product_name %></h6>
             <p class="card-text text-muted">$<%= parseFloat(product.price).toFixed(2) %></p>
             <button class="btn btn-outline-dark buy-now-btn" data-product-id="<%= product.product_id %>">
-                Inquire
+              Inquire
             </button>
-
           </div>
         </div>
       <% }) %>
@@ -40,12 +68,9 @@
   </div>
 </div>
 
-<!-- Modal -->
-
-
-  <!-- Inquiry Modal -->
+<!-- Inquiry Modal -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title" id="productModalLabel">Product Inquiry</h5>
@@ -67,7 +92,7 @@
                 <textarea class="form-control" id="message" rows="3" placeholder="Your Message..." required></textarea>
               </div>
               <input type="hidden" id="productNameHidden">
-              <button type="submit" class="btn btn-dark">Send Inquiry</button>
+              <button type="submit" class="btn btn-dark w-100">Send Inquiry</button>
               <div id="inquirySuccess" class="text-success mt-2 d-none">Inquiry sent!</div>
               <div id="inquiryError" class="text-danger mt-2 d-none">Something went wrong. Try again.</div>
             </form>
@@ -78,8 +103,8 @@
   </div>
 </div>
 
+<!-- Page-specific scripts go BEFORE footer include -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/js/customer.js"></script>
 
 <%- include('partials/footer') %>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-<script src="./js/customer.js"></script>
