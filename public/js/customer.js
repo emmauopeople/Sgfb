@@ -1,204 +1,120 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const buyButtons = document.querySelectorAll(".buy-now-btn");
+  const modalEl = document.getElementById("productModal");
+  const modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
 
-  buyButtons.forEach((button) => {
-    button.addEventListener("click", async () => {
-      const productId = button.dataset.productId;
+  function formatPrice(p) {
+    const n = Number(p);
+    if (Number.isNaN(n)) return "";
+    return `$${n.toFixed(2)}`;
+  }
 
-      try {
-        const response = await axios.get(`/products/${productId}`);
-        const product = response.data;
+  const searchInput = document.getElementById("searchInput");
+  const filterSelect = document.getElementById("filterSelect");
+  const clearBtn = document.getElementById("clearFilters");
+  const cards = Array.from(document.querySelectorAll(".product-card"));
 
-        // Populate modal fields
-        document.getElementById("modalProductName").textContent =
-          product.product_name;
-        document.getElementById("modalProductPrice").textContent =
-          `$${parseFloat(product.price).toFixed(2)}`;
-        document.getElementById("modalProductImage").src =
-          `/images/${product.image_name}`;
+  function getCardName(card) {
+    const dataName = card.dataset?.name;
+    if (dataName) return dataName.toLowerCase();
+    const titleEl = card.querySelector(".card-title, h6, .title, .small");
+    return (titleEl?.textContent || card.textContent || "").toLowerCase();
+  }
+  function getCardCategory(card) {
+    return (card.dataset?.category || "").toLowerCase();
+  }
 
-        // Show modal
+  function applyFilters() {
+    const q = (searchInput?.value || "").trim().toLowerCase();
+    const cat = (filterSelect?.value || "").trim().toLowerCase();
 
-        const productModal = new bootstrap.Modal(
-          document.getElementById("productModal"),
-        );
-        productModal.show();
-      } catch (error) {
-        console.error("❌ Error fetching product:", error);
-      }
+    cards.forEach((card) => {
+      const name = getCardName(card);
+      const category = getCardCategory(card);
+
+      const matchesText = q === "" || name.includes(q);
+      const matchesCat = cat === "" || category === cat;
+
+      card.classList.toggle("d-none", !(matchesText && matchesCat));
     });
-  });
+  }
 
-  //handle products view for customers
-  const buttons = document.querySelectorAll(".buy-now-btn");
-  const modalContainer = document.getElementById("modalContainer");
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (filterSelect) filterSelect.addEventListener("change", applyFilters);
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      if (filterSelect) filterSelect.value = "";
+      applyFilters();
+    });
+  }
+  applyFilters();
 
-  buttons.forEach((button) => {
-    button.addEventListener("click", async () => {
-      const id = button.dataset.productId;
+  document.querySelectorAll(".buy-now-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const id = btn.dataset.productId;
+      if (!id || !modal) return;
 
       try {
-        const res = await axios.get(`/products/${id}`);
-        const product = res.data;
+        const { data: product } = await axios.get(`/products/${id}`);
+        const name = product.product_name || product.name || "";
+        const price = product.price ?? product.unit_price ?? "";
+        const image = product.image_name || product.image || "";
 
-        modalContainer.innerHTML = `
-          <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">${product.product_name}</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                  <img src="/images/${product.image_name}" class="img-fluid mb-3">
-                  <p>${product.description || "Elegant fragrance for all occasions."}</p>
-                  <p class="fw-bold">Price: $${parseFloat(product.price).toFixed(2)}</p>
-                </div>
-                <div class="modal-footer">
-                  <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button class="btn btn-primary">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        const imgEl = document.getElementById("modalImage");
+        if (imgEl) {
+          imgEl.src = image ? `/images/${image}` : "";
+          imgEl.alt = name || "Product Image";
+        }
+        const nameEl = document.getElementById("modalName");
+        if (nameEl) nameEl.textContent = name;
+        const priceEl = document.getElementById("modalPrice");
+        if (priceEl) priceEl.textContent = formatPrice(price);
+        const hiddenEl = document.getElementById("productNameHidden");
+        if (hiddenEl) hiddenEl.value = name;
 
-        new bootstrap.Modal(document.getElementById("productModal")).show();
+        modal.show();
       } catch (err) {
-        console.error("Failed to load product modal", err);
+        console.error("Failed to load product", err);
       }
     });
   });
-});
 
-//sending emails
-document
-  .getElementById("email_form")
-  .addEventListener("submit", function (event) {
-    event.preventDefault(); // Prevent default form submission
+  const form = document.getElementById("inquiryForm");
+  const submitBtn = form?.querySelector('button[type="submit"]');
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const customerEmail = document.getElementById("customerEmail")?.value?.trim();
+      const message = document.getElementById("message")?.value?.trim();
+      const productName = document.getElementById("productNameHidden")?.value;
 
-    const email = document.getElementById("email").value;
-    const message = document.getElementById("message").value;
-
-    if (!email || !message) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    // Send data using Axios
-    axios
-      .post("/sendmail", {
-        customerEmail: email,
-        subject: "Message from Contact Form",
-        text: message,
-      })
-      .then((response) => {
-        alert("Email sent successfully!");
-        document.getElementById("email_form").reset(); // Clear form
-      })
-      .catch((error) => {
-        console.error("Error sending email:", error);
-        alert("Failed to send email. Please try again.");
-      });
-
-    // creating the shopping cart
-    let cart = [];
-
-    document.getElementById("addToCartBtn").addEventListener("click", () => {
-      const productId =
-        document.getElementById("addToCartBtn").dataset.productId;
-
-      // Check if product already in cart
-      const existing = cart.find((item) => item.id === productId);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({ id: productId, quantity: 1 });
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const res = await axios.post("/sendmail", { customerEmail, message, productName });
+        if (res.status >= 200 && res.status < 300) {
+          document.getElementById("inquirySuccess")?.classList.remove("d-none");
+          document.getElementById("inquiryError")?.classList.add("d-none");
+        } else {
+          document.getElementById("inquiryError")?.classList.remove("d-none");
+        }
+      } catch (err) {
+        document.getElementById("inquiryError")?.classList.remove("d-none");
+        console.error(err);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
-
-      // Update cart badge
-      document.getElementById("cartCount").textContent = cart.reduce(
-        (sum, i) => sum + i.quantity,
-        0,
-      );
     });
+  }
 
-    // Load cart modal content
-    document.getElementById("cartIcon").addEventListener("click", async () => {
-      const container = document.getElementById("cartItemsContainer");
-      container.innerHTML = "";
-
-      for (let item of cart) {
-        const response = await axios.get(`/products/${item.id}`);
-        const product = response.data;
-
-        container.innerHTML += `
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <div><strong>${product.product_name}</strong><br>$${product.price}</div>
-        <div>
-          <input type="number" value="${item.quantity}" min="1" class="form-control quantity-input" data-id="${item.id}">
-        </div>
-      </div>
-    `;
-      }
-
-      // Attach quantity change handler
-      document.querySelectorAll(".quantity-input").forEach((input) => {
-        input.addEventListener("change", (e) => {
-          const id = e.target.dataset.id;
-          const qty = parseInt(e.target.value);
-          const item = cart.find((i) => i.id === id);
-          if (item) item.quantity = qty;
-          document.getElementById("cartCount").textContent = cart.reduce(
-            (sum, i) => sum + i.quantity,
-            0,
-          );
-        });
-      });
+  if (modalEl) {
+    modalEl.addEventListener("hidden.bs.modal", () => {
+      document.getElementById("inquirySuccess")?.classList.add("d-none");
+      document.getElementById("inquiryError")?.classList.add("d-none");
+      if (submitBtn) submitBtn.disabled = false;
+      form?.reset();
+      const imgEl = document.getElementById("modalImage");
+      if (imgEl) imgEl.src = "";
     });
-  });
-
-  //modify for inquery modal only for now, no add to card or payment
-  const buyButtons = document.querySelectorAll('.buy-now-btn');
-
-buyButtons.forEach(button => {
-  button.addEventListener('click', async () => {
-    const productId = button.dataset.productId;
-    try {
-      const res = await axios.get(`/products/${productId}`);
-      const product = res.data;
-
-      // Populate modal
-      document.getElementById('modalName').textContent = product.product_name;
-      document.getElementById('modalPrice').textContent = `$${parseFloat(product.price).toFixed(2)}`;
-      document.getElementById('modalImage').src = `/images/${product.image_name}`;
-      document.getElementById('productNameHidden').value = product.product_name;
-
-      // Reset feedback
-      document.getElementById('inquirySuccess').classList.add('d-none');
-      document.getElementById('inquiryError').classList.add('d-none');
-
-      new bootstrap.Modal(document.getElementById('productModal')).show();
-    } catch (error) {
-      console.error("Error fetching product:", error);
-    }
-  });
-});
-
-document.getElementById('inquiryForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const customerEmail = document.getElementById('customerEmail').value;
-  const message = document.getElementById('message').value;
-  const productName = document.getElementById('productNameHidden').value;
-
-  try {
-    const res = await axios.post('/sendmail', { customerEmail, message, productName });
-    if (res.status === 200) {
-      document.getElementById('inquirySuccess').classList.remove('d-none');
-    }
-  } catch (err) {
-    document.getElementById('inquiryError').classList.remove('d-none');
-    console.error(err);
   }
 });
-
