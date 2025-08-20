@@ -1,32 +1,12 @@
 <%- include('partials/header') %>
 
 <style>
-  /* Page-specific tweaks */
-  .hero-banner {
-    background-image: url('/images/cosmetics-banner.jpeg');
-    background-size: cover;
-    background-position: center;
-    min-height: 300px;
-  }
-  .hero-overlay {
-    background: rgba(0,0,0,.5);
-    border-radius: .5rem;
-  }
-  /* Horizontal swipe: one card per view on phones */
-  .h-scroll {
-    scroll-snap-type: x mandatory;
-  }
-  .h-scroll .card {
-    scroll-snap-align: start;
-    min-width: 85vw;           /* show ~one card at a time on phones */
-  }
-  .h-scroll .card img {
-    height: 150px;
-    object-fit: cover;
-  }
-  @media (min-width: 576px) {
-    .h-scroll .card { min-width: 240px; } /* wider screens see more cards */
-  }
+  .hero-banner { background-image: url('/images/cosmetics-banner.jpeg'); background-size: cover; background-position: center; min-height: 300px; }
+  .hero-overlay { background: rgba(0,0,0,.5); border-radius: .5rem; }
+  .h-scroll { scroll-snap-type: x mandatory; }
+  .h-scroll .card { scroll-snap-align: start; min-width: 85vw; }
+  .h-scroll .card img { height: 150px; object-fit: cover; }
+  @media (min-width: 576px) { .h-scroll .card { min-width: 240px; } }
 </style>
 
 <div class="container-fluid p-0">
@@ -48,7 +28,6 @@
     </div>
   </div>
 
-  <!-- Product Cards -->
   <div class="container my-4">
     <h4 class="mb-3">Featured Products</h4>
     <div class="d-flex overflow-auto gap-3 px-2 h-scroll" aria-label="Featured products">
@@ -58,9 +37,7 @@
           <div class="card-body text-center">
             <h6 class="card-title mb-1"><%= product.product_name %></h6>
             <p class="card-text text-muted">$<%= parseFloat(product.price).toFixed(2) %></p>
-            <button class="btn btn-outline-dark buy-now-btn" data-product-id="<%= product.product_id %>">
-              Inquire
-            </button>
+            <button class="btn btn-outline-dark buy-now-btn" data-product-id="<%= product.product_id %>">Inquire</button>
           </div>
         </div>
       <% }) %>
@@ -68,7 +45,6 @@
   </div>
 </div>
 
-<!-- Inquiry Modal -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg">
     <div class="modal-content">
@@ -103,8 +79,7 @@
   </div>
 </div>
 
-<!-- Page-specific scripts go BEFORE footer include -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="/js/customer.js"></script>
+<script src="/js/customer.js?v=<%= Date.now() %>"></script>
 
-<%- include('partials/footer') %>
+<!--<%- include('partials/footer') %>-->
