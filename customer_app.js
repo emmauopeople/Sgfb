@@ -25,6 +25,27 @@ app.set("views", path.join(__dirname, "views", "customer"));
 app.set("views", path.join(__dirname, "views"));
 //app.set('layout', 'layouts/customer_layout');
 
+// Ensure mobile viewport exists in every HTML response (temporary safety net)
+app.use((req, res, next) => {
+  const _send = res.send;
+  res.send = function (body) {
+    try {
+      if (typeof body === 'string'
+          && body.includes('<html')
+          && body.includes('<head>')
+          && !/name=["']viewport["']/i.test(body)) {
+        body = body.replace(
+          '<head>',
+          '<head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
+        );
+      }
+    } catch (e) {}
+    return _send.call(this, body);
+  };
+  next();
+});
+
+
 // Routes
 app.use("/", customerRouter);
 
