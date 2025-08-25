@@ -7,6 +7,8 @@ import adminRouter from "./routes/admin.js";
 dotenv.config();
 import expressLayouts from "express-ejs-layouts";
 import session from "express-session";
+import mobileProductsRouter from "./routes/mobile_products.js";
+
 const app = express();
 
 // Middleware
@@ -21,6 +23,11 @@ app.use(express.static(path.join(__dirname, "public")));
 // View engine setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+//mobile app code
+app.use(express.json({ limit: "16mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use("/images", express.static(path.join(__dirname, "public", "images")));
+app.use("/api/mobile", mobileProductsRouter);
 
 // Session control
 
