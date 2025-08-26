@@ -100,7 +100,7 @@ router.get('/products', async (req, res) => {
   }
 });
 
-router.put('/product/:id', async (req, res) => {
+router.put('/products/:id', async (req, res) => {
   const { id } = req.params;
   const { product_name, product_description, price, quantity, image } = req.body;
 
@@ -127,7 +127,7 @@ router.put('/product/:id', async (req, res) => {
   }
 });
 
-router.delete('/product/:id', async (req, res) => {
+router.delete('/products/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
