@@ -87,4 +87,18 @@ router.post("/products", authToken, upload.single("product_image"), async (req, 
   }
 });
 
+router.get('/products', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const [rows] = await connection.execute('SELECT * FROM products ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error('Fetch products error:', err);
+    res.status(500).json({ message: 'Server error fetching products' });
+  } finally {
+    connection.release();
+  }
+});
+
+
 export default router;
