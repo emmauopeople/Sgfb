@@ -87,6 +87,15 @@ router.post("/products", authToken, upload.single("product_image"), async (req, 
   }
 });
 
+//post /product/:id
+router.post('/products/:id', upload.single('product_image'), async (req, res, next) => {
+  if (req.body._method === 'PUT') {
+    next(); // Pass to the PUT route via method-override
+  } else {
+    res.status(405).json({ message: 'Method not allowed' });
+  }
+});
+
 router.get('/products', async (req, res) => {
   const connection = await pool.getConnection();
   try {

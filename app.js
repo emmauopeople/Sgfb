@@ -14,6 +14,7 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(methodOverride('_method'));
 app.use(express.urlencoded({ extended: true }));
 
 // Static files (for serving images, css, js)
@@ -28,7 +29,6 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.json({ limit: "16mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/images", express.static(path.join(__dirname, "public", "images")));
-app.use(methodOverride('_method'));
 app.use("/api/mobile", mobileProductsRouter);
 
 
