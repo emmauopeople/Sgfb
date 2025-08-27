@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+
 // Absolute path to images dir: /sgfb/public/images
 const IMAGES_DIR = path.join(__dirname, "..", "public", "images");
 
@@ -88,13 +89,7 @@ router.post("/products", authToken, upload.single("product_image"), async (req, 
 });
 
 //post /product/:id
-router.post('/products/:id', upload.single('product_image'), async (req, res, next) => {
-  if (req.body._method === 'PUT') {
-    next(); // Pass to the PUT route via method-override
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
-  }
-});
+
 
 router.get('/products', async (req, res) => {
   const connection = await pool.getConnection();
@@ -109,13 +104,16 @@ router.get('/products', async (req, res) => {
   }
 });
 
-router.put('/products/:id', async (req, res) => {
+
+
+router.put('/products/:id', upload.none(), async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     const { product_name, product_description, price, quantity } = req.body;
     const { id } = req.params;
+
     console.log('Received ID:', id);
     console.log('Request body:', req.body);
 
@@ -143,7 +141,6 @@ router.put('/products/:id', async (req, res) => {
     connection.release();
   }
 });
-
 router.delete('/products/:id', async (req, res) => {
   const connection = await pool.getConnection();
   try {
