@@ -101,46 +101,56 @@ router.get('/products', async (req, res) => {
 });
 
 router.put('/products/:id', async (req, res) => {
-  const { id } = req.params;
-  const { product_name, product_description, price, quantity, image } = req.body;
-
+  const connection = await pool.getConnection();
   try {
-    const [result] = await pool.query(
-      `UPDATE products 
-       SET product_name = ?, 
-           product_description = ?, 
-           price = ?, 
-           quantity = ?, 
-           image_name = ? 
-       WHERE id = ?`,
-      [product_name, product_description, price, quantity, image?.uri || null, id]
-    );
+    await connection.beginTransaction();
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
+    const { product_name, product_description, price, quantity } = req.body;
+    const { id } = req.params;
+    console.log('Received ID:', id);
+    console.log('Request body:', req.body);
 
-    res.json({ message: 'Product updated successfully' });
+    const updateQuery = `
+      UPDATE products
+      SET product_name = ?, product_description = ?, price = ?, quantity = ?
+      WHERE product_id = ?
+    `;
+
+    await connection.execute(updateQuery, [
+      product_name,
+      product_description,
+      price,
+      quantity,
+      id,
+    ]);
+
+    await connection.commit();
+    res.json({ message: 'Product updated successfully.' });
   } catch (err) {
     console.error('Update error:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    await connection.rollback();
+    res.status(500).json({ message: 'Failed to update product' });
+  } finally {
+    connection.release();
   }
 });
 
 router.delete('/products/:id', async (req, res) => {
-  const { id } = req.params;
-
+  const connection = await pool.getConnection();
   try {
-    const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
+    await connection.beginTransaction();
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
+    const { id } = req.params;
+    await connection.execute('DELETE FROM products WHERE product_id = ?', [id]);
 
-    res.json({ message: 'Product deleted successfully' });
+    await connection.commit();
+    res.json({ message: 'Product deleted successfully.' });
   } catch (err) {
     console.error('Delete error:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    await connection.rollback();
+    res.status(500).json({ message: 'Failed to delete product' });
+  } finally {
+    connection.release();
   }
 });
 
