@@ -8,6 +8,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return `$${n.toFixed(2)}`;
   }
 
+  // Normalize a phone to E.164-like digits for wa.me
+  function normalizePhoneToE164(raw) {
+    const digits = (raw || "").replace(/\D/g, "");
+    if (digits.length === 10) return `1${digits}`;            // assume US if 10 digits
+    if (digits.startsWith("+")) return digits.slice(1).replace(/\D/g, "");
+    if (digits.startsWith("00")) return digits.slice(2);
+    return digits;
+  }
+
   const searchInput = document.getElementById("searchInput");
   const filterSelect = document.getElementById("filterSelect");
   const clearBtn = document.getElementById("clearFilters");
@@ -104,6 +113,32 @@ document.addEventListener("DOMContentLoaded", () => {
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
+    });
+  }
+
+  // NEW: WhatsApp button handler
+  const waBtn = document.getElementById("whatsAppBtn");
+  if (waBtn) {
+    waBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const rawPhone = waBtn.getAttribute("data-wa-phone") || "14055511960";
+      const phone = normalizePhoneToE164(rawPhone);
+
+      const productName =
+        document.getElementById("productNameHidden")?.value ||
+        document.getElementById("modalName")?.textContent?.trim() ||
+        "";
+
+      const price = document.getElementById("modalPrice")?.textContent?.trim() || "";
+      const email = document.getElementById("customerEmail")?.value?.trim() || "";
+      const userMsg = document.getElementById("message")?.value?.trim() || "";
+
+      let text = `Hello SGFB, I'm interested in ${productName}${price ? " (" + price + ")" : ""}.`;
+      if (email) text += ` My email: ${email}.`;
+      if (userMsg) text += ` Message: ${userMsg}`;
+
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener");
     });
   }
 
