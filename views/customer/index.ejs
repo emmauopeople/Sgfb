@@ -18,7 +18,7 @@
       <div class="col-md-8 position-relative p-0 hero-banner">
         <div class="position-absolute top-50 start-50 translate-middle text-white text-center p-4 hero-overlay">
           <h1 class="h3 h-md-1">Smells Good, Feel Better</h1>
-          <p class="mb-0">Discover premium fragrances just for you</p>
+          <p class="mb-0">Discover premium cosmetics and fragrances just for you</p>
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
     <h4 class="mb-3">Featured Products</h4>
     <div class="d-flex overflow-auto gap-3 px-2 h-scroll" aria-label="Featured products">
       <% products.forEach(product => { %>
-        <div class="card flex-shrink-0">
+        <div class="card flex-shrink-0 product-card" data-name="<%= product.product_name.toLowerCase() %>" data-category="<%= product.category || '' %>">
           <img src="/images/<%= product.image_name %>" class="card-img-top" alt="<%= product.product_name %>">
           <div class="card-body text-center">
             <h6 class="card-title mb-1"><%= product.product_name %></h6>
@@ -43,10 +43,9 @@
       <% }) %>
     </div>
   </div>
-
-
 </div>
 
+<!-- Inquiry Modal -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg">
     <div class="modal-content">
@@ -55,31 +54,43 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row">
-          <div class="col-md-6">
-            <img id="modalImage" src="" class="img-fluid" alt="Product Image">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <img id="modalImage" class="img-fluid rounded" alt="Product Image">
           </div>
-          <div class="col-md-6">
-            <h5 id="modalName"></h5>
-            <p id="modalPrice" class="fw-bold text-danger"></p>
-            <form id="inquiryForm">
-              <div class="mb-2">
+          <div class="col-12 col-md-6">
+            <h5 id="modalName" class="mb-1"></h5>
+            <p id="modalPrice" class="fw-bold text-danger mb-2"></p>
+            <form id="inquiryForm" class="row g-2">
+              <div class="col-12">
                 <input type="email" class="form-control" id="customerEmail" placeholder="Your Email" required>
               </div>
-              <div class="mb-2">
+              <div class="col-12">
                 <textarea class="form-control" id="message" rows="3" placeholder="Your Message..." required></textarea>
               </div>
+              <!-- Hidden fields to let JS compose messages -->
               <input type="hidden" id="productNameHidden">
-              <button type="submit" class="btn btn-dark w-100">Send Inquiry</button>
+              <input type="hidden" id="productIdHidden">
+              <input type="hidden" id="productPriceHidden">
 
-              <!-- NEW: WhatsApp button -->
-              <a href="#" id="whatsAppBtn" class="btn btn-success w-100 mt-2"
-                 data-wa-phone="14055511960">
-                <i class="bi bi-whatsapp"></i> WhatsApp Me
-              </a>
+              <div class="col-12">
+                <button type="submit" class="btn btn-dark w-100">Send Inquiry</button>
+              </div>
 
-              <div id="inquirySuccess" class="text-success mt-2 d-none">Inquiry sent!</div>
-              <div id="inquiryError" class="text-danger mt-2 d-none">Something went wrong. Try again.</div>
+              <!-- WhatsApp button (href is set dynamically for best compatibility) -->
+              <div class="col-12">
+                <a id="whatsAppBtn"
+                   class="btn btn-success w-100"
+                   data-wa-phone="14055511960"
+                   target="_blank" rel="noopener">
+                  WhatsApp Me
+                </a>
+              </div>
+
+              <div class="col-12">
+                <div id="inquirySuccess" class="text-success mt-2 d-none">Inquiry sent!</div>
+                <div id="inquiryError" class="text-danger mt-2 d-none">Something went wrong. Try again.</div>
+              </div>
             </form>
           </div>
         </div>

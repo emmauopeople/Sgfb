@@ -60,16 +60,22 @@
               <div class="col-12">
                 <textarea class="form-control" id="message" rows="3" placeholder="Your Message..." required></textarea>
               </div>
+              <!-- Hidden fields to let JS compose messages -->
               <input type="hidden" id="productNameHidden">
+              <input type="hidden" id="productIdHidden">
+              <input type="hidden" id="productPriceHidden">
+
               <div class="col-12">
                 <button type="submit" class="btn btn-dark w-100">Send Inquiry</button>
               </div>
 
-              <!-- NEW: WhatsApp button -->
+              <!-- WhatsApp button (href is set dynamically for best compatibility) -->
               <div class="col-12">
-                <a href="#" id="whatsAppBtn" class="btn btn-success w-100"
-                   data-wa-phone="14055511960">
-                  <i class="bi bi-whatsapp"></i> WhatsApp Me
+                <a id="whatsAppBtn"
+                   class="btn btn-success w-100"
+                   data-wa-phone="14055511960"
+                   target="_blank" rel="noopener">
+                  WhatsApp Me
                 </a>
               </div>
 
@@ -85,5 +91,4 @@
   </div>
 </div>
 
-
- <%- include('partials/footer') %> 
+<%- include('partials/footer') %> 
