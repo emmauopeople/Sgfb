@@ -9,14 +9,49 @@ document.addEventListener("DOMContentLoaded", () => {
     return `$${n.toFixed(2)}`;
   }
 
-  // Build a cross-device WhatsApp URL (opens app on phones, web on desktop)
-  function buildWhatsAppURL(phoneDigits, text) {
-    const phone = (phoneDigits || "").replace(/\D/g, "");
-    // api.whatsapp.com works well on both desktop and mobile
-    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
+  // ---------- WhatsApp helpers ----------
+  function normalizePhone(raw) {
+    const d = (raw || "").replace(/\D/g, "");
+    if (d.length === 10) return `1${d}`; // assume US
+    return d;
+  }
+  function buildWaText({ name, id, price, email, userMsg }) {
+    let t = `Hello SGFB, I'm interested in ${name || "this product"}`;
+    if (id) t += ` (ID: ${id})`;
+    if (price) t += ` - ${price}`;
+    if (email) t += `. My email: ${email}`;
+    if (userMsg) t += `. Message: ${userMsg}`;
+    return t;
+  }
+  function openWhatsAppDeepLink(phone, text) {
+    const mobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+    const waScheme = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(text)}`;
+    const webURL   = mobile
+      ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`
+      : `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
+
+    // Try native app; if page doesn't lose focus shortly, fall back in-place (no popup).
+    const fallbackDelay = 700;
+    const start = Date.now();
+
+    const onBlur = () => {
+      // User switched to WhatsApp or a new tab—cancel fallback.
+      window.removeEventListener("blur", onBlur);
+      clearTimeout(tid);
+    };
+    window.addEventListener("blur", onBlur);
+
+    const tid = setTimeout(() => {
+      window.removeEventListener("blur", onBlur);
+      // If still here, navigate same tab to a web URL (bypasses popup blockers)
+      window.location.href = webURL;
+    }, fallbackDelay);
+
+    // Kick off native app attempt
+    window.location.href = waScheme;
   }
 
-  // Keep fields handy
+  // ---------- DOM refs ----------
   const emailInput = document.getElementById("customerEmail");
   const msgInput   = document.getElementById("message");
   const nameH      = document.getElementById("modalName");
@@ -27,25 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const priceHidden= document.getElementById("productPriceHidden");
   const waBtn      = document.getElementById("whatsAppBtn");
 
-  function composeWhatsAppText() {
-    const name = nameHidden?.value?.trim() || nameH?.textContent?.trim() || "";
-    const id   = idHidden?.value?.trim();
-    const price= priceHidden?.value?.trim() || priceH?.textContent?.trim() || "";
-    const email= emailInput?.value?.trim() || "";
-    const user = msgInput?.value?.trim() || "";
-    let text   = `Hello SGFB, I'm interested in ${name}${id ? " (ID: " + id + ")" : ""}${price ? " - " + price : ""}.`;
-    if (email) text += ` My email: ${email}.`;
-    if (user)  text += ` Message: ${user}`;
-    return text;
-  }
-
-  function refreshWhatsAppHref() {
+  function refreshWaHref() {
+    // Keep an href for accessibility (not used for navigation anymore)
     if (!waBtn) return;
-    const phone = waBtn.getAttribute("data-wa-phone") || "14055511960";
-    waBtn.href = buildWhatsAppURL(phone, composeWhatsAppText());
+    const phone = normalizePhone(waBtn.getAttribute("data-wa-phone") || "14055511960");
+    const text = buildWaText({
+      name: nameHidden?.value?.trim() || nameH?.textContent?.trim(),
+      id:   idHidden?.value?.trim(),
+      price: priceHidden?.value?.trim() || priceH?.textContent?.trim(),
+      email: emailInput?.value?.trim(),
+      userMsg: msgInput?.value?.trim(),
+    });
+    waBtn.href = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
   }
 
-  // Search/filter (if present on this page)
+  // ---------- Search/filter (if present) ----------
   const searchInput = document.getElementById("searchInput");
   const filterSelect = document.getElementById("filterSelect");
   const clearBtn = document.getElementById("clearFilters");
@@ -60,11 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function getCardCategory(card) {
     return (card.dataset?.category || "").toLowerCase();
   }
-
   function applyFilters() {
     const q = (searchInput?.value || "").trim().toLowerCase();
     const cat = (filterSelect?.value || "").trim().toLowerCase();
-
     cards.forEach((card) => {
       const name = getCardName(card);
       const category = getCardCategory(card);
@@ -82,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   applyFilters();
 
-  // Open modal with product info
+  // ---------- Open modal with product info ----------
   document.querySelectorAll(".buy-now-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -106,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (idHidden) idHidden.value = String(pid);
         if (priceHidden) priceHidden.value = formatPrice(price);
 
-        refreshWhatsAppHref();
+        refreshWaHref();
         modal.show();
       } catch (err) {
         console.error("Failed to load product", err);
@@ -114,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Inquiry submission
+  // ---------- Inquiry submission (includes Product Name + ID) ----------
   const form = document.getElementById("inquiryForm");
   const submitBtn = form?.querySelector('button[type="submit"]');
   if (form) {
@@ -125,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const productName   = nameHidden?.value;
       const productId     = idHidden?.value;
 
-      // Compose message to include product details so server doesn't need changes
       let composed = `Product: ${productName || ""}`;
       if (productId) composed += ` (ID: ${productId})`;
       composed += userMessage ? `\n\nCustomer message:\n${userMessage}` : "";
@@ -148,18 +176,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Keep WA link fresh as user types
-  ["input", "change"].forEach(evt => {
-    emailInput?.addEventListener(evt, refreshWhatsAppHref);
-    msgInput?.addEventListener(evt, refreshWhatsAppHref);
-  });
+  // ---------- WhatsApp click (native + fallback) ----------
+  if (waBtn) {
+    waBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const phone = normalizePhone(waBtn.getAttribute("data-wa-phone") || "14055511960");
+      const text = buildWaText({
+        name: nameHidden?.value?.trim() || nameH?.textContent?.trim(),
+        id:   idHidden?.value?.trim(),
+        price: priceHidden?.value?.trim() || priceH?.textContent?.trim(),
+        email: emailInput?.value?.trim(),
+        userMsg: msgInput?.value?.trim(),
+      });
+      openWhatsAppDeepLink(phone, text);
+    });
 
-  // Update href right before navigation; do NOT prevent default
-  waBtn?.addEventListener("click", () => {
-    refreshWhatsAppHref();
-  });
+    // keep href updated for accessibility
+    ["input", "change"].forEach(evt => {
+      emailInput?.addEventListener(evt, refreshWaHref);
+      msgInput?.addEventListener(evt, refreshWaHref);
+    });
+    refreshWaHref();
+  }
 
-  // Reset modal on close
+  // ---------- Reset modal ----------
   if (modalEl) {
     modalEl.addEventListener("hidden.bs.modal", () => {
       document.getElementById("inquirySuccess")?.classList.add("d-none");
@@ -170,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (nameHidden) nameHidden.value = "";
       if (idHidden) idHidden.value = "";
       if (priceHidden) priceHidden.value = "";
-      refreshWhatsAppHref();
+      refreshWaHref();
     });
   }
 });
