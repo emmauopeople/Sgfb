@@ -1,4 +1,4 @@
-// customer_products.js — Products page: search + modal + inquiry handling
+// public/js/customer_products.js — Products page: search + modal + inquiry + WhatsApp
 document.addEventListener("DOMContentLoaded", () => {
   const modalEl = document.getElementById("productModal");
   const modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
@@ -9,6 +9,41 @@ document.addEventListener("DOMContentLoaded", () => {
     return `$${n.toFixed(2)}`;
   }
 
+  // ---------- WhatsApp helpers ----------
+  function normalizePhone(raw) {
+    const d = (raw || "").replace(/\D/g, "");
+    if (d.length === 10) return `1${d}`; // assume US
+    return d;
+  }
+  function buildWaText({ name, id, price, email, userMsg }) {
+    let t = `Hello SGFB, I'm interested in ${name || "this product"}`;
+    if (id) t += ` (ID: ${id})`;
+    if (price) t += ` - ${price}`;
+    if (email) t += `. My email: ${email}`;
+    if (userMsg) t += `. Message: ${userMsg}`;
+    return t;
+  }
+  function openWhatsAppDeepLink(phone, text) {
+    const mobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+    const waScheme = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(text)}`;
+    const webURL   = mobile
+      ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`
+      : `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
+
+    const fallbackDelay = 700;
+    const onBlur = () => {
+      window.removeEventListener("blur", onBlur);
+      clearTimeout(tid);
+    };
+    window.addEventListener("blur", onBlur);
+    const tid = setTimeout(() => {
+      window.removeEventListener("blur", onBlur);
+      window.location.href = webURL; // in-place navigation avoids popup blockers
+    }, fallbackDelay);
+
+    window.location.href = waScheme; // try native app first
+  }
+
   // ---------- Search & Filter ----------
   const searchInput = document.getElementById("searchInput");
   const filterSelect = document.getElementById("filterSelect");
@@ -16,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const cards = Array.from(document.querySelectorAll(".product-card"));
 
   function getCardName(card) {
-    // Prefer data attribute; fallback to text inside typical title nodes
     const dataName = card.dataset?.name;
     if (dataName) return dataName.toLowerCase();
     const titleEl = card.querySelector(".card-title, h6, .title, .small");
@@ -25,35 +59,50 @@ document.addEventListener("DOMContentLoaded", () => {
   function getCardCategory(card) {
     return (card.dataset?.category || "").toLowerCase();
   }
-
   function applyFilters() {
     const q = (searchInput?.value || "").trim().toLowerCase();
     const cat = (filterSelect?.value || "").trim().toLowerCase();
-
     cards.forEach((card) => {
       const name = getCardName(card);
       const category = getCardCategory(card);
-
       const matchesText = q === "" || name.includes(q);
       const matchesCat = cat === "" || category === cat;
-
       card.classList.toggle("d-none", !(matchesText && matchesCat));
     });
   }
-
   if (searchInput) searchInput.addEventListener("input", applyFilters);
   if (filterSelect) filterSelect.addEventListener("change", applyFilters);
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      if (searchInput) searchInput.value = "";
-      if (filterSelect) filterSelect.value = "";
-      applyFilters();
-    });
-  }
-  // Apply once on load (safe even if controls not present)
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    if (searchInput) searchInput.value = "";
+    if (filterSelect) filterSelect.value = "";
+    applyFilters();
+  });
   applyFilters();
 
-  // ---------- Modal + Inquiry ----------
+  // ---------- Modal + Inquiry + WhatsApp ----------
+  const emailInput = document.getElementById("customerEmail");
+  const msgInput   = document.getElementById("message");
+  const nameH      = document.getElementById("modalName");
+  const priceH     = document.getElementById("modalPrice");
+  const imgEl      = document.getElementById("modalImage");
+  const nameHidden = document.getElementById("productNameHidden");
+  const idHidden   = document.getElementById("productIdHidden");
+  const priceHidden= document.getElementById("productPriceHidden");
+  const waBtn      = document.getElementById("whatsAppBtn");
+
+  function refreshWaHref() {
+    if (!waBtn) return;
+    const phone = normalizePhone(waBtn.getAttribute("data-wa-phone") || "14055511960");
+    const text = buildWaText({
+      name: nameHidden?.value?.trim() || nameH?.textContent?.trim(),
+      id:   idHidden?.value?.trim(),
+      price: priceHidden?.value?.trim() || priceH?.textContent?.trim(),
+      email: emailInput?.value?.trim(),
+      userMsg: msgInput?.value?.trim(),
+    });
+    waBtn.href = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
+  }
+
   document.querySelectorAll(".buy-now-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -62,22 +111,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const { data: product } = await axios.get(`/products/${id}`);
-        const name = product.product_name || product.name || "";
+        const name  = product.product_name || product.name || "";
         const price = product.price ?? product.unit_price ?? "";
         const image = product.image_name || product.image || "";
+        const pid   = product.product_id ?? id;
 
-        const imgEl = document.getElementById("modalImage");
         if (imgEl) {
           imgEl.src = image ? `/images/${image}` : "";
           imgEl.alt = name || "Product Image";
         }
-        const nameEl = document.getElementById("modalName");
-        if (nameEl) nameEl.textContent = name;
-        const priceEl = document.getElementById("modalPrice");
-        if (priceEl) priceEl.textContent = formatPrice(price);
-        const hiddenEl = document.getElementById("productNameHidden");
-        if (hiddenEl) hiddenEl.value = name;
+        if (nameH) nameH.textContent = name;
+        if (priceH) priceH.textContent = formatPrice(price);
+        if (nameHidden) nameHidden.value = name;
+        if (idHidden) idHidden.value = String(pid);
+        if (priceHidden) priceHidden.value = formatPrice(price);
 
+        refreshWaHref();
         modal.show();
       } catch (err) {
         console.error("Failed to load product", err);
@@ -90,13 +139,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const customerEmail = document.getElementById("customerEmail")?.value?.trim();
-      const message = document.getElementById("message")?.value?.trim();
-      const productName = document.getElementById("productNameHidden")?.value;
+      const customerEmail = emailInput?.value?.trim();
+      const userMessage   = msgInput?.value?.trim();
+      const productName   = nameHidden?.value;
+      const productId     = idHidden?.value;
+
+      let composed = `Product: ${productName || ""}`;
+      if (productId) composed += ` (ID: ${productId})`;
+      composed += userMessage ? `\n\nCustomer message:\n${userMessage}` : "";
 
       if (submitBtn) submitBtn.disabled = true;
       try {
-        const res = await axios.post("/sendmail", { customerEmail, message, productName });
+        const res = await axios.post("/sendmail", { customerEmail, message: composed, productName });
         if (res.status >= 200 && res.status < 300) {
           document.getElementById("inquirySuccess")?.classList.remove("d-none");
           document.getElementById("inquiryError")?.classList.add("d-none");
@@ -112,15 +166,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Ensure the form re-enables and resets whenever the modal is closed
+  if (waBtn) {
+    waBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const phone = normalizePhone(waBtn.getAttribute("data-wa-phone") || "14055511960");
+      const text = buildWaText({
+        name: nameHidden?.value?.trim() || nameH?.textContent?.trim(),
+        id:   idHidden?.value?.trim(),
+        price: priceHidden?.value?.trim() || priceH?.textContent?.trim(),
+        email: emailInput?.value?.trim(),
+        userMsg: msgInput?.value?.trim(),
+      });
+      openWhatsAppDeepLink(phone, text);
+    });
+
+    ["input", "change"].forEach(evt => {
+      emailInput?.addEventListener(evt, refreshWaHref);
+      msgInput?.addEventListener(evt, refreshWaHref);
+    });
+    refreshWaHref();
+  }
+
   if (modalEl) {
     modalEl.addEventListener("hidden.bs.modal", () => {
       document.getElementById("inquirySuccess")?.classList.add("d-none");
       document.getElementById("inquiryError")?.classList.add("d-none");
       if (submitBtn) submitBtn.disabled = false;
       form?.reset();
-      const imgEl = document.getElementById("modalImage");
       if (imgEl) imgEl.src = "";
+      if (nameHidden) nameHidden.value = "";
+      if (idHidden) idHidden.value = "";
+      if (priceHidden) priceHidden.value = "";
+      refreshWaHref();
     });
   }
 });
